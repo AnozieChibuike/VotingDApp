@@ -1,0 +1,79 @@
+const deployContract = async () => {
+    if (!whitelistStart || !whitelistEnd || !votingStart || !votingEnd) {
+      alert("Please enter all dates for the whitelist and voting periods.");
+      return;
+    }
+
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const contractInstance = new web3.eth.Contract(ABI); // Your ABI here
+
+      const deployedContract = await contractInstance
+        .deploy({
+          data: CONTRACT_BYTECODE,
+          arguments: [
+            Math.floor(new Date(whitelistStart).getTime() / 1000),
+            Math.floor(new Date(whitelistEnd).getTime() / 1000),
+            Math.floor(new Date(votingStart).getTime() / 1000),
+            Math.floor(new Date(votingEnd).getTime() / 1000),
+          ],
+        })
+        .send({ from: accounts[0] });
+
+      setNewContractAddress(deployedContract.options.address);
+      setContract(deployedContract);
+      alert(
+        `Contract successfully deployed at ${deployedContract.options.address}`
+      );
+    } catch (error) {
+      console.error("Error deploying contract", error);
+    }
+  };
+
+
+  try {
+    // console.log(1000)
+    // Get nonce for replay protection
+    // const nonce = await contract.methods.nonces(account).call();
+    // console.log(nonce + 's');
+    // Create the message hash
+    // const messageHash = web3.utils.soliditySha3("I");
+    const message = "Wow";
+    // console.log(messageHash);
+
+    // Sign the message
+    const signature = await window.ethereum.request({
+      method: "personal_sign",
+      params: [account, message],
+    });
+    // const signature = await web3.eth.personal.sign(messageHash, account);
+    console.log(signature);
+    // Send the signed message to the relayer (via an API call)
+    const response = await fetch("http://localhost:4000/vote", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        electionName,
+        start: dateToTimestamp(whitelistStart),
+        end: dateToTimestamp(whitelistEnd),
+        vstart: dateToTimestamp(votingStart),
+        vend: dateToTimestamp(votingEnd),
+        signature: signature,
+        message,
+        userAddress: account,
+      }),
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      alert(result.error + " Go / to whitelist your wallet");
+      return;
+    }
+    populateElections();
+    alert("Election created successfully")
+  } catch (error) {
+  } finally {
+    setLoading(false);
+  }
