@@ -3,15 +3,36 @@ import React, { useState, useEffect, useContext } from "react";
 import Web3 from "web3";
 import { contractAddress, contractABI } from "../contract.js";
 import { AppContext } from "../context/AppContext.jsx";
+import { useNavigate } from "react-router-dom";
+import WalletButton from "../components/WalletButton.jsx";
+import { Button, Table } from "flowbite-react";
+import Loader from "../components/loader.jsx";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const VotePage = () => {
-  const [electionId, setElectionId] = useState(2);
+  const [selectedCandidateInfo, setSelected] = useState(null);
+  const navigate = useNavigate();
+  // const [electionId, setElectionId] = useState(2);
   const [candidateId, setCandidateId] = useState("");
+  const [election, setElection] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [gas, setGas] = useState(0);
-  const { account } = useContext(AppContext);
+  const { account, loading, setLoading } = useContext(AppContext);
 
-  const contractAddress = "0x1e78ff9407dd881f9ab17320Afc15A49d626ae00";
+  const urlParams = new URLSearchParams(window.location.search);
+
+  // Extract the 'id' parameter
+  const id = urlParams.get("id");
+
+  useEffect(() => {
+    if (!id) {
+      alert("Election ID missing");
+      navigate("/");
+    }
+  }, []);
+
+  // const contractAddress = "0x1e78ff9407dd881f9ab17320Afc15A49d626ae00";
   const web3 = new Web3(window.ethereum);
   const contract = new web3.eth.Contract(contractABI, contractAddress, {
     handleRevert: true,
@@ -29,10 +50,19 @@ const VotePage = () => {
   //   estGas();
   // }, []);
   useEffect(() => {
-    if (electionId) {
+    if (id) {
       loadCandidates();
+      loadElection();
     }
-  }, [electionId]);
+  }, [id, account]);
+
+  useEffect(() => {
+    if (selectedCandidateInfo?.name) notifyWithButtons();
+  }, [selectedCandidateInfo]);
+
+  useEffect(() => {
+    setInterval(() => updateCountdown(election, "whitelist", "voting"));
+  }, [election]);
 
   const loadCandidates = async () => {
     try {
@@ -43,8 +73,10 @@ const VotePage = () => {
 
       // setGas(estimatedGas);
       const candidateCount = await contract.methods
-        .getCandidates(electionId)
+        .getCandidates(Number(id))
         .call();
+
+      console.log(candidateCount);
 
       // const candidateList = [];
       // for (let i = 1; i <= candidateCount; i++) {
@@ -58,66 +90,244 @@ const VotePage = () => {
     }
   };
 
-  const voteForCandidate = async () => {
-    let OK = true;
+  const loadElection = async () => {
     try {
       // const accounts = await web3.eth.requestAccounts();
       // const estimatedGas = await contract.methods
-      //   .vote(electionId, candidateId)
-      //   .estimateGas({
-      //     from: accounts[0],
-      //   });
-      await contract.methods
-        .vote(electionId, candidateId)
-        .call({ from: account, gas: 30000 });
-      alert("Your vote has been cast!");
-    } catch (e) {
-      OK = false;
-      console.log(e);
-      console.log(e.data);
-      const data = e.data;
-      // const txHash = Object.keys(data)[0]; // TODO improve
-      // const reason = data[txHash].reason;
+      //   .vote(1,2)
+      //   .estimateGas({ from: accounts[0] });
 
-      console.log(e.data.message); // prints "This is error message"
-      // alert("Failed to cast vote.");
-    }
-    if (OK) {
-      try {
-        await contract.methods
-          .vote(electionId, candidateId)
-          .send({ from: account, gas: 30000 });
-        alert("Your vote has been cast!");
-      } catch (error) {
-        console.log(error);
-      }
+      // setGas(estimatedGas);
+      const election = await contract.methods.elections(Number(id)).call();
+
+      console.log(election);
+
+      // const candidateList = [];
+      // for (let i = 1; i <= candidateCount; i++) {
+      //   const candidate = await contract.methods.getCandidate(electionId, i).call();
+      //   candidateList.push(candidate);
+      // }
+
+      setElection(election);
+    } catch (error) {
+      console.error("Error loading candidates:", error);
     }
   };
 
-  return (
-    <div>
-      <h2>Vote for a Candidate</h2>
-      <input
-        type="number"
-        placeholder="Election ID"
-        onChange={(e) => setElectionId(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Candidate ID"
-        onChange={(e) => setCandidateId(e.target.value)}
-      />
-      <button onClick={voteForCandidate}>Vote</button>
+  const updateCountdown = (items, whitelistElementId, votingElementId) => {
+    const VStart = Number(items?.votingStartTime);
+    const VEnd = Number(items?.votingEndTime);
+    const WStart = Number(items?.whitelistStartTime);
+    const WEnd = Number(items?.whitelistEndTime);
 
-      <h3>Candidates:</h3>
-      <ul>
-        {candidates.map((candidate, index) => (
-          <li key={index}>
-            {candidate.name} (Votes: {candidate.voteCount})
-          </li>
-        ))}
-      </ul>
+    if (!items) return;
+
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // Function to calculate and update the countdown
+    const setCountdownText = (
+      targetTime,
+      endTime,
+      element,
+      startText,
+      endText,
+      startedText,
+      endedText
+    ) => {
+      const elementNode = document.getElementById(element);
+      if (!elementNode) return;
+
+      if (currentTime < targetTime) {
+        // Event has not started
+        const timeDiff = targetTime - currentTime;
+        const days = Math.floor(timeDiff / (3600 * 24));
+        const hours = Math.floor((timeDiff % (3600 * 24)) / 3600);
+        const minutes = Math.floor((timeDiff % 3600) / 60);
+        const seconds = timeDiff % 60;
+        elementNode.innerHTML = `${startText} in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+      } else if (currentTime >= targetTime && currentTime < endTime) {
+        // Event is ongoing
+        const timeDiff = endTime - currentTime;
+        const days = Math.floor(timeDiff / (3600 * 24));
+        const hours = Math.floor((timeDiff % (3600 * 24)) / 3600);
+        const minutes = Math.floor((timeDiff % 3600) / 60);
+        const seconds = timeDiff % 60;
+        elementNode.innerHTML = `${startedText}, ends in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        // Event has ended
+        const timeSinceEnd = currentTime - endTime;
+        const days = Math.floor(timeSinceEnd / (3600 * 24));
+        const hours = Math.floor((timeSinceEnd % (3600 * 24)) / 3600);
+        const minutes = Math.floor((timeSinceEnd % 3600) / 60);
+        const seconds = timeSinceEnd % 60;
+        elementNode.innerHTML = `${endedText} ${days}d ${hours}h ${minutes}m ${seconds}s ago`;
+      }
+    };
+
+    // Update countdown for whitelist
+    setCountdownText(
+      WStart,
+      WEnd,
+      whitelistElementId,
+      "Whitelist starts",
+      "Whitelist ends",
+      "Whitelist ongoing",
+      "Whitelist ended"
+    );
+
+    // Update countdown for voting
+    setCountdownText(
+      VStart,
+      VEnd,
+      votingElementId,
+      "Voting starts",
+      "Voting ends",
+      "Voting ongoing",
+      "Voting ended"
+    );
+  };
+
+  const vote = async () => {
+    if (!account) {
+      alert("Connect your wallet before proceeding");
+      return;
+    }
+    if (!selectedCandidateInfo?.name) {
+      alert("Something went wrong");
+      return;
+    }
+    let OK = true;
+    try {
+      const message = `I vote for ${selectedCandidateInfo.name}`;
+    } catch (error) {}
+  };
+
+  const CustomToastWithButtons = ({ closeToast }) => (
+    <div className="">
+      <p>
+        Are you sure you want to vote for{" "}
+        <span className="text-blue-500 font-bold">
+          {selectedCandidateInfo?.name}
+        </span>
+        ?
+      </p>
+      <div className="flex justify-between m-5">
+        <Button
+          onClick={() => {
+            handleConfirm(closeToast);
+          }}
+          className="bg-blue-600"
+        >
+          Confirm
+        </Button>
+        <Button
+          className="bg-red-600"
+          onClick={() => {
+            setLoading(false);
+            closeToast();
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
     </div>
+  );
+
+  const handleConfirm = (closeToast) => {
+    vote()
+      .then((data) => {})
+      .catch((e) => {
+        console.log(e);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+    toast.success("Action Confirmed!", { autoClose: 2000 });
+    closeToast(); // Closes the current toast
+  };
+
+  const notifyWithButtons = () => {
+    toast(<CustomToastWithButtons />, {
+      // style: {
+      //   backgroundColor: "black",
+      // },
+      position: "top-center", // Center the toast at the top
+      autoClose: false, // Keep open until interaction
+      closeOnClick: false, // Prevent closing on click
+      pauseOnHover: true,
+    });
+  };
+
+  return (
+    <>
+      {loading && <Loader />}
+      <div className="px-3">
+        <div className="flex flex-row justify-between items-center p-3">
+          <h1
+            className="text-3xl font-bold text-blue-600"
+            onClick={notifyWithButtons}
+          >
+            Meta<span className="text-red-400">Vote</span>
+          </h1>
+          <WalletButton />
+        </div>
+        <div>
+          <p id="whitelist"></p>
+          <p id="voting"></p>
+        </div>
+        <h2 className="text-2xl text-center my-3 font-semibold">
+          Vote for a Candidate
+        </h2>
+        {/* {candidates.map((candidate, index) => (
+          <li key={index}>
+            {candidate.name} (Votes: {Number(candidate.voteCount)})
+          </li>
+        ))} */}
+
+        {candidates.length === 0 ? (
+          <p>Loading....</p>
+        ) : (
+          <Table striped>
+            <Table.Head>
+              <Table.HeadCell className="text-xl">Name</Table.HeadCell>
+              <Table.HeadCell className="text-xl">Vote Count</Table.HeadCell>
+              <Table.HeadCell className="text-xl">Action</Table.HeadCell>
+            </Table.Head>
+            <Table.Body className="divide-y">
+              {candidates.map((item) => (
+                <Table.Row
+                  className="border-gray-700 bg-gray-800"
+                  key={item[0]}
+                >
+                  <Table.Cell className="whitespace-nowrap font-medium text-black">
+                    {item[1]}
+                  </Table.Cell>
+                  <Table.Cell className="whitespace-nowrap font-medium text-black">
+                    {Number(item[2])}
+                  </Table.Cell>
+                  <Table.Cell className="whitespace-nowrap font-medium text-black">
+                    <Button
+                      className="bg-blue-600"
+                      onClick={() => {
+                        setLoading(true);
+                        setSelected({
+                          id: Number(item[0]),
+                          name: item[1],
+                        });
+                      }}
+                    >
+                      Vote
+                    </Button>
+                    {/* {Number(item[0])} */}
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table>
+        )}
+        <ToastContainer />
+      </div>
+    </>
   );
 };
 

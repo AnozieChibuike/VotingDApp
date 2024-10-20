@@ -46,6 +46,7 @@ contract VotingSystem is Ownable {
     mapping(uint256 => mapping(address => bool)) public hasVoted; // Vote status for each election
     mapping(uint256 => mapping(uint256 => Candidate)) public candidates; // Candidates for each election
     mapping(uint256 => mapping(uint256 => address)) public registrationToWallet; // Map registration numbers to wallet addresses per election
+    mapping(uint256 => mapping(string => address)) public deviceToWallet;
     mapping(address => bool) public isElectionCreator; // Mapping to track who can create elections
 
     // Election counter
@@ -204,6 +205,7 @@ contract VotingSystem is Ownable {
 
     // Whitelist function with registration number for an election
     function whitelistUser(
+        string memory deviceFingerprint,
         address _walletAddress,
         uint256 _electionId,
         uint256 _registrationNumber,
@@ -213,6 +215,7 @@ contract VotingSystem is Ownable {
             !isWhitelisted[_electionId][_walletAddress],
             "User is already whitelisted"
         );
+        require(deviceToWallet[_electionId][deviceFingerprint] == address(0), "Device already associated with a wallet");
         require(
             registrationToWallet[_electionId][_registrationNumber] ==
                 address(0),
@@ -225,6 +228,7 @@ contract VotingSystem is Ownable {
 
         // Link registration number and whitelist the user for the specific election
         registrationToWallet[_electionId][_registrationNumber] = _walletAddress;
+        deviceToWallet[_electionId][deviceFingerprint] = _walletAddress;
         isWhitelisted[_electionId][_walletAddress] = true;
         elections[_electionId].voterCount++;
         elections[_electionId].balance -= _estimatedGas;

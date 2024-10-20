@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const Web3 = require("web3");
 const cors = require("cors");
+const crypto = require("crypto");
 
 // Initialize web3 and contract
 const web3 = new Web3.Web3(process.env.INFURA_URL);
@@ -1092,6 +1093,24 @@ app.post("/vote", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+app.post("/store-face", (req, res) => {
+  const { faceDescriptor } = req.body;
+
+  // Convert faceDescriptor into a hash for secure storage
+  const storedFaceDescriptor = hashFaceDescriptor(faceDescriptor);
+  res.json({
+    success: true,
+    message: "Face data stored successfully",
+    hashedFace: storedFaceDescriptor,
+  });
+});
+
+function hashFaceDescriptor(faceDescriptor) {
+  const hash = crypto.createHash("sha256");
+  hash.update(JSON.stringify(faceDescriptor));
+  return hash.digest("hex");
+}
 
 // Start the server
 const PORT = process.env.PORT || 4000;

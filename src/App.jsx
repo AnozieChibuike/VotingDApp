@@ -10,6 +10,7 @@ import ResultsPage from "./pages/ResultsPage";
 import AppProvider from "./context/AppContext";
 import WalletButton from "./components/WalletButton";
 import ManageElection from "./pages/ManageElection";
+import Test from "./pages/test";
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/test" element={<Test />} />
           <Route path="/create-election" element={<CreateElectionPage />} />
           <Route path="/manage" element={<ManageElection />} />
           <Route path="/whitelist" element={<WhitelistPage />} />
