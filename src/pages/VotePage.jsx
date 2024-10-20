@@ -199,6 +199,23 @@ const VotePage = () => {
     let OK = true;
     try {
       const message = `I vote for ${selectedCandidateInfo.name}`;
+      const signature = await window.ethereum.request({
+        method: "personal_sign",
+        params: [account, message],
+      });
+      const response = await fetch("http://localhost:4000/vote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          electionId: id,
+          signature: signature,
+          message,
+          candidateId: selectedCandidateInfo.id,
+          userAddress: account,
+        }),
+      });
     } catch (error) {}
   };
 
