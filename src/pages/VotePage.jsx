@@ -197,8 +197,11 @@ const VotePage = () => {
       return;
     }
     let OK = true;
+
     try {
-      const gas = await contract.methods.vote().estimateGas();
+      const gas = await contract.methods
+        .vote(account, id, selectedCandidateInfo.id, 30000)
+        .estimateGas();
       console.log(gas);
       const message = `I vote for ${selectedCandidateInfo.name}`;
       const signature = await window.ethereum.request({
@@ -227,7 +230,9 @@ const VotePage = () => {
           status: true,
         };
       else return { message: result.error };
-    } catch (error) {}
+    } catch (error) {
+      return { message: error.data.message };
+    }
   };
 
   const CustomToastWithButtons = ({ closeToast }) => (
