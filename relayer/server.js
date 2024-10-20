@@ -1032,7 +1032,7 @@ app.post("/whitelist", async (req, res) => {
 });
 
 app.post("/vote", async (req, res) => {
-  const { electionId, userAddress, message, signature, candidateId } = req.body;
+  const { gas, electionId, userAddress, message, signature, candidateId } = req.body;
   try {
     // Build the transaction
     const gasPrice = await web3.eth.getGasPrice();
@@ -1056,7 +1056,7 @@ app.post("/vote", async (req, res) => {
     const tx = {
       to: contractAddress,
       data: votingContract.methods
-        .vote(userAddress, electionId, candidateId, gasPrice)
+        .vote(userAddress, electionId, candidateId, gas)
         .encodeABI(),
       // gas: 3000000,
       from: account.address,
@@ -1090,7 +1090,7 @@ app.post("/vote", async (req, res) => {
       });
       return;
     }
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.cause.message });
   }
 });
 

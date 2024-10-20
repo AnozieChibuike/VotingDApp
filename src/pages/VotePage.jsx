@@ -198,6 +198,8 @@ const VotePage = () => {
     }
     let OK = true;
     try {
+      const gas = await contract.methods.vote().estimateGas();
+      console.log(gas);
       const message = `I vote for ${selectedCandidateInfo.name}`;
       const signature = await window.ethereum.request({
         method: "personal_sign",
@@ -214,8 +216,17 @@ const VotePage = () => {
           message,
           candidateId: selectedCandidateInfo.id,
           userAddress: account,
+          gas,
         }),
       });
+      const result = await response.json();
+      if (result.success)
+        return {
+          message: `Successfully Voted for ${selectedCandidateInfo.name}`,
+          hash: result.transactionHash,
+          status: true,
+        };
+      else return { message: result.error };
     } catch (error) {}
   };
 
@@ -252,15 +263,23 @@ const VotePage = () => {
 
   const handleConfirm = (closeToast) => {
     vote()
-      .then((data) => {})
+      .then((data) => {
+        if (data?.status) {
+          toast.success(data.message, { autoClose: 2000 });
+          closeToast();
+        } else {
+          toast.warn(data.message, { autoClose: 2000 });
+          closeToast();
+        }
+      })
       .catch((e) => {
         console.log(e);
       })
       .finally(() => {
         setLoading(false);
       });
-    toast.success("Action Confirmed!", { autoClose: 2000 });
-    closeToast(); // Closes the current toast
+
+    // Closes the current toast
   };
 
   const notifyWithButtons = () => {
