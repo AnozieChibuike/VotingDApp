@@ -390,6 +390,11 @@ export const contractABI = [
   {
     inputs: [
       {
+        internalType: "string",
+        name: "deviceFingerprint",
+        type: "string",
+      },
+      {
         internalType: "address",
         name: "_walletAddress",
         type: "address",
@@ -402,6 +407,11 @@ export const contractABI = [
       {
         internalType: "uint256",
         name: "_registrationNumber",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_estimatedGas",
         type: "uint256",
       },
     ],
@@ -487,6 +497,30 @@ export const contractABI = [
         internalType: "string",
         name: "imageURL",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    name: "deviceToWallet",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -936,4 +970,5 @@ export const contractABI = [
     type: "function",
   },
 ];
-export const contractAddress = "0x574d3B198a05a136CA6cd94e6920269A81D80D16";
+export const contractAddress = "0x1119B318fE11e0ED504f7eBDCBc0f0646494e787";
+// 0x574d3B198a05a136CA6cd94e6920269A81D80D16

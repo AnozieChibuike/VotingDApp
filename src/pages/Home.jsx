@@ -12,13 +12,6 @@ const Home = () => {
   const web3 = new Web3(window.ethereum);
   const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-  // setInterval(updateCountdown, 1000);
-
-  useEffect(() => {
-    // setLoading(true);
-    console.log(loading);
-  }, [loading]);
-
   const whiteList = async () => {
     try {
       setLoading(true);
@@ -66,9 +59,9 @@ const Home = () => {
   return (
     <>
       {loading && <Loader />}
-      <div className="px-4">
+      <div className="px-9">
         <div className="flex flex-row justify-between items-center p-3">
-          <h1 className="text-3xl font-bold text-blue-600">
+          <h1 className="text-xl font-bold text-blue-600">
             Meta<span className="text-red-400">Vote</span>
           </h1>
           <WalletButton />

@@ -88,9 +88,9 @@ contract VotingSystem is Ownable {
         _;
     }
 
-    modifier onlyWhitelisted(uint256 _electionId) {
+    modifier onlyWhitelisted(uint256 _electionId, address _voter) {
         require(
-            isWhitelisted[_electionId][msg.sender],
+            isWhitelisted[_electionId][_voter],
             "You are not whitelisted to vote"
         );
         _;
@@ -223,7 +223,7 @@ contract VotingSystem is Ownable {
         );
         require(
             elections[_electionId].balance > _estimatedGas,
-            "Insufficient gas in reserve to vote, tell the election creator"
+            "Insufficient gas in reserve to whitelist wallet, tell the election creator"
         );
 
         // Link registration number and whitelist the user for the specific election
@@ -244,7 +244,7 @@ contract VotingSystem is Ownable {
         uint256 _estimatedGas
     )
         external
-        onlyWhitelisted(_electionId)
+        onlyWhitelisted(_electionId, _voter)
         onlyOwner
         onlyDuringVoting(_electionId)
     {

@@ -95,7 +95,7 @@ const FaqSection = () => {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="py-8">
       <h1 className="text-2xl font-bold mb-6">Frequently Asked Questions</h1>
       {faqs.map((faq, index) => (
         <FaqDropdown key={index} question={faq.question} answer={faq.answer} />

@@ -20,11 +20,7 @@ const CreateElectionPage = () => {
   const [votingEnd, setVotingEnd] = useState("");
   const [electionLoading, setElectionLoading] = useState(false);
 
-  // const contractAddress = "0x4F3857e53041e58078D8ec0d8C91F848322ff0Bd";
-
-  // biconomy.init()
   const web3 = new Web3(window.ethereum);
-  // const web3 = new Web3(biconomy.provider);
   const contract = new web3.eth.Contract(contractABI, contractAddress);
 
   // contract.events.ElectionCreated().on("data", (event) => {
@@ -53,11 +49,9 @@ const CreateElectionPage = () => {
       const elections = await contract.methods
         .getElectionsByCreator(account)
         .call();
-
-      console.log(elections);
       setDepElections(elections);
     } catch (error) {
-      console.error(error);
+      alert("Error: " + error?.data?.message);
     } finally {
       setElectionLoading(false);
     }
@@ -84,6 +78,19 @@ const CreateElectionPage = () => {
       alert("Missing some required parameters to create the election");
       return;
     }
+    // if (dateToTimestamp(whitelistStart) > dateToTimestamp(whitelistEnd)) {
+    //   alert("Whitelisting start time must be before whitelisting end time");
+    //   return;
+    // }
+    // if (dateToTimestamp(votingStart) > dateToTimestamp(votingEnd)) {
+    //   alert("Voting start time must be before voting end time");
+    //   return;
+    // }
+    
+    // if (dateToTimestamp(whitelistEnd) > dateToTimestamp(votingStart)) {
+    //   alert("Whitelisting must end before voting starts");
+    //   return;
+    // }
 
     setLoading(true);
     try {
@@ -273,7 +280,7 @@ const CreateElectionPage = () => {
                 className="p-2 bg-blue-700 rounded-md"
                 onClick={() => {
                   // setElect({ ...items });
-                  navigate("/manage", { state: { items } });
+                  navigate(`/manage?id=${items.id}`);
                   // console.log(items);
                 }}
               >
@@ -293,6 +300,5 @@ const CreateElectionPage = () => {
 function dateToTimestamp(dateString) {
   return Math.floor(new Date(dateString).getTime() / 1000);
 }
-
 
 export default CreateElectionPage;

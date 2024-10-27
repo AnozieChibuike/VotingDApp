@@ -13,13 +13,54 @@ const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 function ManageElection() {
   const [openModal, setOpenModal] = React.useState(false);
+  const [openDepositModal, setOpenDepositModal] = React.useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
+  const [items, setItems] = useState({});
   const { loading, setLoading, account } = useContext(AppContext);
-  const { items } = location.state || {};
+  const urlParams = new URLSearchParams(window.location.search);
   const [price, setPrice] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const balance = web3.utils.fromWei(Number(items ? items[9] : 0), "ether");
+
+  // Extract the 'id' parameter
+  const id = urlParams.get("id");
+
+  useEffect(() => {
+    if (!id) {
+      alert("Election ID missing");
+      navigate("/");
+      return;
+    }
+    loadElection();
+  }, [account]);
+
+  const loadElection = async () => {
+    if (!account) return;
+    setLoading(true);
+    try {
+      const election = await contract.methods.elections(Number(id)).call();
+      console.log(election);
+      if (election?.creator !== account) {
+        console.log(election.creator);
+        console.log(account);
+        console.log(typeof election.creator);
+        alert("You do not own this Election");
+        navigate("/create-election");
+        return;
+      }
+      if (Number(election.votingStartTime) == 0) {
+        alert("Invalid Election");
+        navigate("/");
+        return;
+      }
+      setItems(election);
+    } catch (error) {
+      console.error("Error loading election:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchCurrentPrice = async () => {
     try {
       const response = await fetch(
@@ -32,47 +73,6 @@ function ManageElection() {
       console.error(e);
     }
   };
-
-  // const updateCountdown = (targetTime, element) => {
-  //   const VStart = items?.whitelistStartTime;
-  //   const VEnd = items?.whitelistEndTime;
-  //   const WStart = items?.votingStartTime;
-  //   const Wend = items?.votingEndTime;
-  //   const whitelistElement = document.getElementById("whitelist");
-  //   const votingElement = document.getElementById("voting");
-
-  //   if (!items) return;
-  //   const currentTime = Math.floor(Date.now() / 1000);
-
-  //   const timeDiff = targetTime - currentTime;
-
-  //   const countdownElement = document.getElementById(element);
-
-  //   if (timeDiff > 0) {
-  //     // Time until the event starts
-  //     const days = Math.floor(timeDiff / (3600 * 24));
-  //     const hours = Math.floor((timeDiff % (3600 * 24)) / 3600);
-  //     const minutes = Math.floor((timeDiff % 3600) / 60);
-  //     const seconds = timeDiff % 60;
-
-  //     countdownElement.innerHTML = `Starts in ${days}d ${hours}h ${minutes}m ${seconds}s`;
-  //   } else {
-  //     // Event has started, show the time since the event started
-  //     const timeSinceStart = Math.abs(timeDiff);
-  //     const days = Math.floor(timeSinceStart / (3600 * 24));
-  //     const hours = Math.floor((timeSinceStart % (3600 * 24)) / 3600);
-  //     const minutes = Math.floor((timeSinceStart % 3600) / 60);
-  //     const seconds = timeSinceStart % 60;
-
-  //     countdownElement.innerHTML = `Started ${days}d ${hours}h ${minutes}m ${seconds}s ago`;
-  //   }
-  // };
-
-  // setInterval(() =>
-  //   updateCountdown(Number(items?.whitelistStartTime), "WStart")
-  // );
-  // setInterval(() => updateCountdown(Number(items?.whitelistEndTime), "WEnd"));
-  // setInterval(() => updateCountdown(Number(items?.votingStartTime), "VStart"));
 
   const updateCountdown = (items, whitelistElementId, votingElementId) => {
     const VStart = Number(items?.votingStartTime);
@@ -154,18 +154,14 @@ function ManageElection() {
     setCandidates(candidatesz);
   };
 
-  setInterval(() => updateCountdown(items, "whitelist", "voting"));
-
   useEffect(() => {
-    if (!items) {
-      alert("Session expired");
-      navigate("/create-election");
+    if (!items?.id) {
       return;
     }
+    setInterval(() => updateCountdown(items, "whitelist", "voting"));
     fetchCandidates();
     fetchCurrentPrice();
-    console.log(items);
-  }, []);
+  }, [items]);
   return (
     <>
       {loading && <Loader />}
@@ -189,7 +185,14 @@ function ManageElection() {
             {price && <span>~ {(price * balance).toFixed(2)} USD</span>}
           </p>
           <div className="flex gap-3 py-3">
-            <Button className="bg-blue-600">Top up</Button>
+            <Button
+              className="bg-blue-600"
+              onClick={() => {
+                setOpenDepositModal(true);
+              }}
+            >
+              Top up
+            </Button>
             <Button className="bg-blue-600">Withdraw</Button>
           </div>
         </div>
@@ -260,6 +263,16 @@ function ManageElection() {
           items={items}
           setCandidates={setCandidates}
         />
+        <DepositModal
+          account={account}
+          openModal={openDepositModal}
+          setOpenModal={setOpenDepositModal}
+          electionId={Number(items ? items.id : 0)}
+          setLoading={setLoading}
+          items={items}
+          price={price}
+          loadElection={loadElection}
+        />
       </div>
     </>
   );
@@ -275,7 +288,6 @@ const CandidateModal = ({
   setCandidates = () => {},
 }) => {
   const [name, setName] = React.useState("");
-  const [imageUrl, setImageUrl] = React.useState("");
 
   const fetchCandidates = async () => {
     const candidatesz = await contract.methods
@@ -292,7 +304,7 @@ const CandidateModal = ({
     setLoading(true);
     try {
       const result = await contract.methods
-        .addCandidate(electionId, name, imageUrl)
+        .addCandidate(electionId, name, "imageUrl")
         .send({ from: account });
       fetchCandidates();
       alert("Candidate created successfully");
@@ -307,7 +319,7 @@ const CandidateModal = ({
   function onCloseModal() {
     setOpenModal(false);
     setName("");
-    setImageUrl("");
+    // setImageUrl("");
   }
   return (
     <Modal show={openModal} size="md" onClose={onCloseModal} popup>
@@ -329,7 +341,7 @@ const CandidateModal = ({
               required
             />
           </div>
-          <div>
+          {/* <div>
             <div className="mb-2 block">
               <Label htmlFor="imageUrl" value="Candidate's Image Url" />
             </div>
@@ -341,10 +353,102 @@ const CandidateModal = ({
               required
               placeholder="Link to the Candidate's picture"
             />
-          </div>
+          </div> */}
           <div className="w-full">
             <Button className="bg-blue-600" onClick={addCandidate}>
               Create Candidate
+            </Button>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
+  );
+};
+
+const DepositModal = ({
+  price,
+  electionId,
+  openModal,
+  account,
+  items,
+  setOpenModal = () => {},
+  setLoading = () => {},
+  loadElection = () => {},
+}) => {
+  const [name, setName] = React.useState("");
+  function onCloseModal() {
+    setOpenModal(false);
+    setName("");
+    // setImageUrl("");
+  }
+
+  const deposit = async () => {
+    setLoading(true);
+    let OK = true;
+    try {
+      const result = await contract.methods.deposit(Number(items.id)).call({
+        from: account,
+        to: contract,
+        value: web3.utils.toWei(name, "ether"),
+      });
+    } catch (error) {
+      console.log(error);
+      OK = false;
+      alert(error.message);
+    }
+    try {
+      if (OK) {
+        await contract.methods.deposit(Number(items.id)).send({
+          from: account,
+          to: contract,
+          value: web3.utils.toWei(name, "ether"),
+        });
+        alert("Successfully topped up "+ name + " eth to election reserve");
+      }
+      loadElection();
+    } catch (e) {
+    } finally {
+      setLoading(false);
+      onCloseModal()
+    }
+  };
+  return (
+    <Modal show={openModal} size="md" onClose={onCloseModal} popup>
+      <Modal.Header />
+      <Modal.Body>
+        <div className="space-y-6">
+          <h3 className="text-xl font-medium text-gray-900 dark:text-white">
+            Deposit funds to cover voter gas fee
+          </h3>
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="name" value="Amount in eth" />
+            </div>
+            <TextInput
+              id="name"
+              placeholder="e.g 0.001"
+              value={name}
+              onChange={(name) => setName(event.target.value)}
+              required
+            />
+            <p className="text-black">{(price * name).toFixed(2)} $</p>
+          </div>
+          {/* <div>
+            <div className="mb-2 block">
+              <Label htmlFor="imageUrl" value="Candidate's Image Url" />
+            </div>
+            <TextInput
+              id="imageUrl"
+              type="text"
+              value={imageUrl}
+              onChange={(url) => setImageUrl(event.target.value)}
+              required
+              placeholder="Link to the Candidate's picture"
+            />
+          </div> */}
+          <div className="w-full">
+            <Button className="bg-blue-600" onClick={deposit}>
+              Deposit
             </Button>
           </div>
         </div>

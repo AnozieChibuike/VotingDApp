@@ -12,88 +12,6 @@ const web3 = new Web3.Web3(process.env.INFURA_URL);
 const contractAddress = process.env.CONTRACT_ADDRESS;
 const contractABI = [
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_electionId",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_imageURL",
-        type: "string",
-      },
-    ],
-    name: "addCandidate",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_creator",
-        type: "address",
-      },
-    ],
-    name: "addElectionCreator",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "_whitelistStartTime",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_whitelistEndTime",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_votingStartTime",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_votingEndTime",
-        type: "uint256",
-      },
-    ],
-    name: "createElection",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_electionID",
-        type: "uint256",
-      },
-    ],
-    name: "deposit",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
     inputs: [],
     stateMutability: "nonpayable",
     type: "constructor",
@@ -295,67 +213,6 @@ const contractABI = [
     type: "event",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_creator",
-        type: "address",
-      },
-    ],
-    name: "removeElectionCreator",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_voter",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_electionId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_candidateId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_estimatedGas",
-        type: "uint256",
-      },
-    ],
-    name: "vote",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -400,29 +257,6 @@ const contractABI = [
     type: "event",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_walletAddress",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_electionId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_registrationNumber",
-        type: "uint256",
-      },
-    ],
-    name: "whitelistUser",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -455,12 +289,30 @@ const contractABI = [
         type: "uint256",
       },
       {
-        internalType: "uint256",
-        name: "_amount",
-        type: "uint256",
+        internalType: "string",
+        name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_imageURL",
+        type: "string",
       },
     ],
-    name: "withdrawBalance",
+    name: "addCandidate",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_creator",
+        type: "address",
+      },
+    ],
+    name: "addElectionCreator",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -499,6 +351,76 @@ const contractABI = [
         internalType: "string",
         name: "imageURL",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "_whitelistStartTime",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_whitelistEndTime",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_votingStartTime",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_votingEndTime",
+        type: "uint256",
+      },
+    ],
+    name: "createElection",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_electionID",
+        type: "uint256",
+      },
+    ],
+    name: "deposit",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    name: "deviceToWallet",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -935,6 +857,26 @@ const contractABI = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_creator",
+        type: "address",
+      },
+    ],
+    name: "removeElectionCreator",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "serviceFeePercentage",
     outputs: [
@@ -947,6 +889,98 @@ const contractABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_voter",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "_electionId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_candidateId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_estimatedGas",
+        type: "uint256",
+      },
+    ],
+    name: "vote",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "deviceFingerprint",
+        type: "string",
+      },
+      {
+        internalType: "address",
+        name: "_walletAddress",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "_electionId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_registrationNumber",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_estimatedGas",
+        type: "uint256",
+      },
+    ],
+    name: "whitelistUser",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_electionId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256",
+      },
+    ],
+    name: "withdrawBalance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ]; // Replace with your contract's ABI
 const votingContract = new web3.eth.Contract(contractABI, contractAddress);
 
@@ -957,8 +991,17 @@ app.use(bodyParser.json());
 
 // Vote endpoint
 app.post("/whitelist", async (req, res) => {
-  const { electionId, registrationNumber, userAddress, message, signature } =
-    req.body;
+  const {
+    deviceId,
+    electionId,
+    registrationNumber,
+    userAddress,
+    message,
+    signature,
+    gas,
+  } = req.body;
+
+  console.log(req.body)
   // console.log(req.body);
   // const nonce = await web3.eth.getTransactionCount(userAddress);
 
@@ -993,7 +1036,13 @@ app.post("/whitelist", async (req, res) => {
     const tx = {
       to: contractAddress,
       data: votingContract.methods
-        .whitelistUser(userAddress, electionId, registrationNumber, gasPrice)
+        .whitelistUser(
+          deviceId,
+          userAddress,
+          electionId,
+          registrationNumber,
+          gas
+        )
         .encodeABI(),
       // gas: 3000000,
       from: account.address,
@@ -1018,7 +1067,7 @@ app.post("/whitelist", async (req, res) => {
   } catch (error) {
     console.log(error);
     if (
-      error.cause.message ===
+      error.cause?.message ===
       "execution reverted: You are not authorized to create elections"
     ) {
       res.status(500).json({
@@ -1032,7 +1081,8 @@ app.post("/whitelist", async (req, res) => {
 });
 
 app.post("/vote", async (req, res) => {
-  const { gas, electionId, userAddress, message, signature, candidateId } = req.body;
+  const { gas, electionId, userAddress, message, signature, candidateId } =
+    req.body;
   try {
     // Build the transaction
     const gasPrice = await web3.eth.getGasPrice();

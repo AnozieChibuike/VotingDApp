@@ -36,7 +36,7 @@ function WalletButton({}) {
     <div className="flex items-center gap-1 cursor-pointer">
       <div className="p-3 bg-blue-700 text-white rounded-lg" onClick={connect}>
         {!account ? (
-          <p>Connect wallet</p>
+          <p className="text-sm">Connect</p>
         ) : (
           <div className="flex items-center gap-2">
             <FaWallet size={20} />

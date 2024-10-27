@@ -12,8 +12,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 const VotePage = () => {
   const [selectedCandidateInfo, setSelected] = useState(null);
+  const [disabled, setDisabled] = useState(false);
   const navigate = useNavigate();
-  // const [electionId, setElectionId] = useState(2);
   const [candidateId, setCandidateId] = useState("");
   const [election, setElection] = useState("");
   const [candidates, setCandidates] = useState([]);
@@ -37,18 +37,6 @@ const VotePage = () => {
   const contract = new web3.eth.Contract(contractABI, contractAddress, {
     handleRevert: true,
   });
-  // const estGas = async () => {
-  //   const estimatedGas = await contract.methods
-  //     .vote()
-  //     .estimateGas({ from: account });
-
-  //   setGas(estimatedGas);
-  //   console.log(estimatedGas);
-  // };
-
-  // useEffect(() => {
-  //   estGas();
-  // }, []);
   useEffect(() => {
     if (id) {
       loadCandidates();
@@ -100,7 +88,11 @@ const VotePage = () => {
       // setGas(estimatedGas);
       const election = await contract.methods.elections(Number(id)).call();
 
-      console.log(election);
+      if (Number(election.votingStartTime == 0)) {
+        alert("Invalid Election");
+        navigate("/");
+        return;
+      }
 
       // const candidateList = [];
       // for (let i = 1; i <= candidateCount; i++) {
@@ -196,13 +188,10 @@ const VotePage = () => {
       alert("Something went wrong");
       return;
     }
-    let OK = true;
-
     try {
-      const gas = await contract.methods
-        .vote(account, id, selectedCandidateInfo.id, 30000)
-        .estimateGas();
-      console.log(gas);
+      const gass = await contract.methods
+        .vote(account, Number(id), Number(selectedCandidateInfo.id), 30000)
+        .estimateGas({ from: "0x4Bb246e8FC52CBFf7a0FD5a298367E4718773395" });
       const message = `I vote for ${selectedCandidateInfo.name}`;
       const signature = await window.ethereum.request({
         method: "personal_sign",
@@ -214,12 +203,12 @@ const VotePage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          electionId: id,
+          electionId: Number(id),
           signature: signature,
           message,
-          candidateId: selectedCandidateInfo.id,
+          candidateId: Number(selectedCandidateInfo.id),
           userAddress: account,
-          gas,
+          gas: Number(gass),
         }),
       });
       const result = await response.json();
@@ -247,8 +236,10 @@ const VotePage = () => {
       <div className="flex justify-between m-5">
         <Button
           onClick={() => {
+            // setDisabled(true);
             handleConfirm(closeToast);
           }}
+          // disabled={disabled}
           className="bg-blue-600"
         >
           Confirm
@@ -267,6 +258,7 @@ const VotePage = () => {
   );
 
   const handleConfirm = (closeToast) => {
+    closeToast();
     vote()
       .then((data) => {
         if (data?.status) {
@@ -279,9 +271,14 @@ const VotePage = () => {
       })
       .catch((e) => {
         console.log(e);
+        setDisabled(false);
+        setLoading(false);
+        closeToast();
       })
       .finally(() => {
+        setDisabled(false);
         setLoading(false);
+        closeToast();
       });
 
     // Closes the current toast
@@ -304,10 +301,7 @@ const VotePage = () => {
       {loading && <Loader />}
       <div className="px-3">
         <div className="flex flex-row justify-between items-center p-3">
-          <h1
-            className="text-3xl font-bold text-blue-600"
-            onClick={notifyWithButtons}
-          >
+          <h1 className="text-3xl font-bold text-blue-600">
             Meta<span className="text-red-400">Vote</span>
           </h1>
           <WalletButton />
@@ -326,7 +320,7 @@ const VotePage = () => {
         ))} */}
 
         {candidates.length === 0 ? (
-          <p>Loading....</p>
+          <p>No Candidates yet....</p>
         ) : (
           <Table striped>
             <Table.Head>
