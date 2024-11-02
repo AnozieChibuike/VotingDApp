@@ -4,10 +4,10 @@ import { MdDeleteForever } from "react-icons/md";
 import { AppContext } from "../context/AppContext";
 import loadWeb3 from "../helper/connectWallet";
 
-const chainId = "0x14A34"; // get from server (Relayer network)
-const chainName = "Base Sepolia";
-const rpcURL = "https://sepolia.base.org/";
-const explorerURL = "https://sepolia-explorer.base.org/";
+const chainId = "0x106A"; // get from server (Relayer network)
+const chainName = "Lisk Sepolia";
+const rpcURL = "https://rpc.sepolia-api.lisk.com/";
+const explorerURL = "https://sepolia-blockscout.lisk.com/";
 
 function WalletButton({}) {
   // const once = null;
